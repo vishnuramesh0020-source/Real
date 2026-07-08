@@ -8,11 +8,10 @@ import TestimonialCard from './components/TestimonialCard';
 import ContactForm from './components/ContactForm';
 import Footer from './components/Footer';
 
-
 const properties = [
-  { id: 1, title: 'VS Modern Luxury Villa', location: 'Yercaud Foot Hills, Salem', price: 'RS : 1 cr', beds: 4, baths: 5, area: '4,200', status: 'For Sale', image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=800&q=80' },
-  { id: 2, title: ' VS Apartment', location: 'Yercaud Foot Hills, Salem', price: 'RS : 80 lacs', beds: 2, baths: 2, area: '1,150', status: 'For Rent', image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80' },
-  { id: 3, title: 'VS Beach House', location: 'ECR , Chennai ', price: 'RS : 2.5 cr', beds: 5, baths: 6, area: '5,800', status: 'For Sale', image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80' },
+  { id: 1, title: 'VS Modern Luxury Villa', location: 'Yercaud Foot Hills, Salem', locKeyword: 'Salem', type: 'Villa', numericPrice: 100, price: 'RS : 1 cr', beds: 4, baths: 5, area: '4,200', status: 'For Sale', image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=800&q=80' },
+  { id: 2, title: 'VS Apartment', location: 'Yercaud Foot Hills, Salem', locKeyword: 'Salem', type: 'Apartment', numericPrice: 80, price: 'RS : 80 lacs', beds: 2, baths: 2, area: '1,150', status: 'For Rent', image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80' },
+  { id: 3, title: 'VS Beach House', location: 'ECR , Chennai ', locKeyword: 'Chennai', type: 'Beach House', numericPrice: 250, price: 'RS : 2.5 cr', beds: 5, baths: 6, area: '5,800', status: 'For Sale', image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80' },
 ];
 
 const featuredProperties = [
@@ -26,13 +25,14 @@ const agents = [
 ];
 
 const testimonials = [
-  { id: 1, name: 'Roja', rating: 4.5, text: 'Finding our dream home with this team was effortless. Their dedication and transparent process turned what usually is a stressful event into a beautiful milestone.', property: 'VS Modern Luxury Villa' }
+  { id: 1, name: 'Roja', rating: 4, text: 'Finally my Dream Home came true with their help! , Thank you so much!, For VS Estates', property: 'VS Modern Luxury Villa' } // Fixed rating to integer to avoid string.repeat errors
 ];
 
 export default function App() {
-const [darkMode, setDarkMode] = useState(() => {
+  const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark';
   });
+  const [filters, setFilters] = useState({ location: '', propertyType: '', budget: '' });
 
   useEffect(() => {
     if (darkMode) {
@@ -44,13 +44,35 @@ const [darkMode, setDarkMode] = useState(() => {
     }
   }, [darkMode]);
 
+  const handleSearch = (searchData) => {
+    setFilters(searchData);
+    
+    document.getElementById('properties')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const filteredProperties = properties.filter(p => {
+
+    if (filters.location && p.locKeyword !== filters.location) return false;
+
+  
+    if (filters.propertyType && p.type !== filters.propertyType) return false;
+
+  
+    if (filters.budget) {
+      if (filters.budget === 'low' && (p.numericPrice < 50 || p.numericPrice > 100)) return false;
+      if (filters.budget === 'mid' && (p.numericPrice < 100 || p.numericPrice > 500)) return false;
+      if (filters.budget === 'high' && p.numericPrice < 500) return false;
+    }
+
+    return true;
+  });
+
   return (
     <div className="bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 scroll-smooth">
       <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-      <Hero />
-    {/* // <div className={`bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 scroll-smooth ${darkMode ? 'dark' : ''}`}>
-    // <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-    // <Hero onSearchChange={setFilters} /> */}
+      
+  
+      <Hero onSearch={handleSearch} />
       
       <section className="py-12 bg-blue-600 text-white dark:bg-blue-800">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
@@ -61,29 +83,38 @@ const [darkMode, setDarkMode] = useState(() => {
         </div>
       </section>
 
-
       <section id="properties" className="py-20 max-w-7xl mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Latest Properties for Sale & Rent</h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">Explore handpicked residential and commercial properties globally.</p>
+          
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {properties.map(p => <PropertyCard key={p.id} {...p} />)}
-        </div>
-
+        
+        {filteredProperties.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredProperties.map(p => <PropertyCard key={p.id} {...p} />)}
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-white dark:bg-slate-950 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800">
+            <p className="text-lg font-semibold text-slate-500">No properties match your exact search filters.</p>
+            <button 
+              onClick={() => setFilters({ location: '', propertyType: '', budget: '' })}
+              className="mt-4 bg-blue-600 text-white font-bold px-5 py-2 rounded-xl text-sm"
+            >
+              Reset Filters
+            </button>
+          </div>
+        )}
       </section>
-
 
       <section id="featured" className="py-20 bg-slate-100 dark:bg-slate-800/50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Featured Masterpieces</h2>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">Curated luxury and unmatched craftsmanship for elite living.</p>
+      
           </div>
           {featuredProperties.map(fp => <FeaturedCard key={fp.id} {...fp} />)}
         </div>
       </section>
-
 
       <section id="agents" className="py-20 max-w-7xl mx-auto px-4">
         <div className="text-center mb-12">
@@ -95,7 +126,6 @@ const [darkMode, setDarkMode] = useState(() => {
         </div>
       </section>
 
-
       <section className="py-20 bg-slate-100 dark:bg-slate-800/50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
@@ -106,7 +136,6 @@ const [darkMode, setDarkMode] = useState(() => {
           </div>
         </div>
       </section>
-
 
       <section id="contact" className="py-20 max-w-7xl mx-auto px-4">
         <ContactForm />
